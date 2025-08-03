@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import time
 from dotenv import load_dotenv
 
 from modules.llm_setup import initialize_llm
@@ -9,43 +10,64 @@ from modules.retriever_chain import build_conversational_rag_chain
 from modules.session_handler import get_session_history
 
 # Load environment variables
-
 load_dotenv()
 os.environ['HF_TOKEN'] = os.getenv("HF_TOKEN")
 
-st.title("HealthQ ChatBot")
+st.title("🧠 HealthQ ChatBot")
 
 api_key = os.getenv("OPENAI_API_KEY")
 
 if api_key:
+    st.info("🔐 API key loaded. Initializing LLM...")
+    t0 = time.time()
     llm = initialize_llm(api_key)
+    st.success(f"✅ LLM initialized in {time.time() - t0:.2f}s")
 
-    session_id = st.text_input("Session ID", value="default_session")
+    session_id = st.text_input("🆔 Enter Session ID:", value="default_session")
+
     if 'store' not in st.session_state:
         st.session_state.store = {}
 
-    uploaded_files = st.file_uploader("Choose PDF files", type="pdf", accept_multiple_files=True)
-    
+    uploaded_files = st.file_uploader("📄 Upload PDF policy files", type="pdf", accept_multiple_files=True)
+
     if uploaded_files:
+        # Step 1: Load documents
+        t1 = time.time()
+        st.info("📚 Loading documents...")
         documents = load_documents(uploaded_files)
+        st.success(f"✅ Loaded {len(documents)} documents in {time.time() - t1:.2f}s")
+
+        # Step 2: Build vectorstore
+        t2 = time.time()
+        st.info("📦 Building vector store...")
         vectorstore = build_vectorstore(documents)
-        retriever = vectorstore.as_retriever()
+        st.success(f"✅ Vector store built in {time.time() - t2:.2f}s")
 
+        # Step 3: Create RAG chain
+        t3 = time.time()
+        st.info("🔗 Creating RAG retrieval chain...")
         conversational_chain = build_conversational_rag_chain(
-            llm, retriever, lambda s: get_session_history(st.session_state, s)
+            llm,
+            get_session_history_fn=lambda s: get_session_history(st.session_state, s),
+            filter_metadata=None  # Change to {"plan": "Plan A"} if you want filtering
         )
+        st.success(f"✅ RAG chain initialized in {time.time() - t3:.2f}s")
 
-        user_input = st.text_input("Your question")
+        # Step 4: Question input
+        user_input = st.text_input("💬 Ask a question about the policy")
+
         if user_input:
-            session_history = get_session_history(st.session_state, session_id)
+            t4 = time.time()
+            st.info("🤖 Generating answer...")
             try:
                 response = conversational_chain.invoke(
                     {"input": user_input},
                     config={"configurable": {"session_id": session_id}},
                 )
-                st.success(response["answer"])
-               # st.write("Chat history:", session_history.messages)
+                st.success(f"✅ Answered in {time.time() - t4:.2f}s")
+                st.write("📝 Answer:", response["answer"])
             except Exception as e:
-                st.error(f"Error: {e}")
+                st.error(f"❌ Error: {e}")
+
 else:
-    st.warning("something went wrong , server error")
+    st.warning("❗ Missing OpenAI API key or server error.")
