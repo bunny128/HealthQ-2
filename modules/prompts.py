@@ -1,4 +1,4 @@
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.prompts import ChatPromptTemplate
 
 def get_contextualize_prompt():
     system_prompt = (
@@ -9,7 +9,6 @@ def get_contextualize_prompt():
     )
     return ChatPromptTemplate.from_messages([
         ("system", system_prompt),
-        MessagesPlaceholder("chat_history"),
         ("human", "{input}"),
     ])
 
@@ -21,7 +20,7 @@ def get_qa_prompt():
       Carefully analyze the **context** provided from official insurance documents to answer the user’s **question**. Your response must be:
       - Accurate, complete, and free of assumptions
       - Structured clearly and easy to understand for a general audience
-      - Detailed if the context includes multiple points
+      - Detailed if the context includes multiple points , elaborate the answer if the data is huge 
       - if multiple question asked in same input , give detail output with proper detail 
 
       Do not fabricate information. If the answer is not found in the context, simply respond with: **"I'm sorry, I couldn't find that information in the provided policy documents."**
@@ -37,6 +36,5 @@ def get_qa_prompt():
     )
     return ChatPromptTemplate.from_messages([
         ("system", system_prompt),
-        MessagesPlaceholder("chat_history"),
         ("human", "{input}"),
     ])

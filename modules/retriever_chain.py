@@ -2,8 +2,6 @@ from langchain_chroma import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain.chains import create_history_aware_retriever, create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.runnables.history import RunnableWithMessageHistory
-
 
 def get_metadata_filtered_retriever(filter_metadata: dict = None):
     db = Chroma(
@@ -20,8 +18,7 @@ def get_metadata_filtered_retriever(filter_metadata: dict = None):
 
     return retriever
 
-
-def build_conversational_rag_chain(llm, get_session_history_fn, filter_metadata: dict = None):
+def build_conversational_rag_chain(llm, filter_metadata: dict = None):
     from modules.prompts import get_contextualize_prompt, get_qa_prompt
 
     retriever = get_metadata_filtered_retriever(filter_metadata)
@@ -38,12 +35,4 @@ def build_conversational_rag_chain(llm, get_session_history_fn, filter_metadata:
         history_aware_retriever, question_answer_chain
     )
 
-    conversational_chain = RunnableWithMessageHistory(
-        rag_chain,
-        get_session_history_fn,
-        input_messages_key="input",
-        history_messages_key="chat_history",
-        output_messages_key="answer"
-    )
-
-    return conversational_chain
+    return rag_chain

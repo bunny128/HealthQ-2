@@ -7,7 +7,6 @@ from modules.llm_setup import initialize_llm
 from modules.file_handler import load_documents
 from modules.vector_store import build_vectorstore
 from modules.retriever_chain import build_conversational_rag_chain
-from modules.session_handler import get_session_history
 
 # Load environment variables
 load_dotenv()
@@ -22,11 +21,6 @@ if api_key:
     t0 = time.time()
     llm = initialize_llm(api_key)
     st.success(f"✅ LLM initialized in {time.time() - t0:.2f}s")
-
-    session_id = st.text_input("🆔 Enter Session ID:", value="default_session")
-
-    if 'store' not in st.session_state:
-        st.session_state.store = {}
 
     uploaded_files = st.file_uploader("📄 Upload PDF policy files", type="pdf", accept_multiple_files=True)
 
@@ -48,8 +42,7 @@ if api_key:
         st.info("🔗 Creating RAG retrieval chain...")
         conversational_chain = build_conversational_rag_chain(
             llm,
-            get_session_history_fn=lambda s: get_session_history(st.session_state, s),
-            filter_metadata=None  # Change to {"plan": "Plan A"} if you want filtering
+            filter_metadata=None
         )
         st.success(f"✅ RAG chain initialized in {time.time() - t3:.2f}s")
 
@@ -60,14 +53,10 @@ if api_key:
             t4 = time.time()
             st.info("🤖 Generating answer...")
             try:
-                response = conversational_chain.invoke(
-                    {"input": user_input},
-                    config={"configurable": {"session_id": session_id}},
-                )
+                response = conversational_chain.invoke({"input": user_input})
                 st.success(f"✅ Answered in {time.time() - t4:.2f}s")
                 st.write("📝 Answer:", response["answer"])
             except Exception as e:
                 st.error(f"❌ Error: {e}")
-
 else:
     st.warning("❗ Missing OpenAI API key or server error.")
