@@ -3,10 +3,6 @@ python-dotenv
 ipykernel
 langchain-community
 pypdf
-bs4
-arxiv
-pymupdf
-wikipedia
 langchain-text-splitters
 langchain-openai
 chromadb
@@ -14,14 +10,7 @@ sentence_transformers
 langchain_huggingface
 faiss-cpu
 langchain_chroma
-duckdb
-pandas
 openai
-langchain-groq
-duckduckgo-search
-pymupdf
-arxiv
-wikipedia
 mysql-connector-python
 SQLAlchemy
 validators==0.28.1
